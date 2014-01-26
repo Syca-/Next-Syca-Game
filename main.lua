@@ -7,9 +7,9 @@
 Stateful = require 'lib.stateful'
 require 'lib.middleclass'
 require 'lib.collision'
-require 'lib.camera'
 require 'lib.GameState'
-require 'GameStates.Game'
+Timer = require 'lib.timer'
+require 'States.Game'
 
 --short hand stuff    
 lg = love.graphics

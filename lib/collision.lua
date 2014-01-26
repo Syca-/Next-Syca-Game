@@ -17,12 +17,11 @@ local mtd
     if horizontal then
        v1.x = v1.x + mtd.x
        --At this point you should set your vertical speed to zero as well. For me it's xvel
-        v1.xvel = 0
+        
     end
     if vertical then
        v1.y = v1.y + mtd.y
        
-      --colliding = true
     end
 end
 
@@ -57,60 +56,14 @@ function calculatemtd(v1, v2)
 
    if math.abs(left) < right then --Determine the collision on both axises? Axis'? I give up. On the x and y axis
       mtd.x = left
-      if v1.jumping then
-        v1.yvel = 0
-        v1.jumping = true
-      end
    else
       mtd.x = right
-      if v1.jumping then
-        v1.yvel = 0
-        v1.jumping = true
-      end
    end
 
    if math.abs(up) < down then
       mtd.y = up
-      if v1.jumping then
-        v1.yvel = 0
-        v1.jumping = false
-      end
-      if v2.disapear ~= nil  then
-        if v2.disapear == false then
-          timer = timer - love.timer.getDelta()
-          if timer <=0 then
-            v2.disapear = true
-            timer = timeLimit
-          end
-        end
-      end
-      if v2.button ~= nil then
-        if v2.button == true then
-          buttonActive = true
-          v2.button = true
-        end
-      end
-      if v2.death then
-        death= true
-      end
-      if v2.Yellowbutton then
-        player.Player.gravity = -player.Player.gravity
-      end
-      if v2.Greenbutton then
-        player.Player.gravity = 500
-      end
    else
       mtd.y = down
-      if v1.jumping then
-        v1.yvel = 0
-        v1.jumping = true
-      end
-     if v2.Yellowbutton then
-        player.Player.gravity = -player.Player.gravity
-      end
-      if v2.Greenbutton then
-        player.Player.gravity = 500
-      end
    end
    if math.abs(mtd.x) < math.abs(mtd.y) then
       mtd.y = 0

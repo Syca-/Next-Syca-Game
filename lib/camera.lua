@@ -1,8 +1,9 @@
+local zoom = 1
 camera = {}
 camera._x = 0
 camera._y = 0
-camera.scaleX = 1
-camera.scaleY = 1
+camera.scaleX = zoom
+camera.scaleY = zoom
 camera.rotation = 0
  
 function camera:set()

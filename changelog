@@ -1,0 +1,11 @@
+0.1:
+
+Added:
+	basic movement
+	joystick support
+
+Fixed:
+	none
+
+Other:
+	Clean up and simpified old code

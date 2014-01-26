@@ -30,11 +30,5 @@ end
 
 function Creature:render()
 	color(75,0,200)
-	rect('fill',self.x,self.y,self.width,self.height/2)
-	if paralax then
-		color(black)
-	elseif paralax == false then
-		color(100,100,100)
-	end
-	rect('fill',self.x,self.y+(self.height/2),self.width,self.height/2)
+	rect('fill',self.x,self.y,self.width,self.height)
 end
