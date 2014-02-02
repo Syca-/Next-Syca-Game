@@ -15,6 +15,7 @@ require 'States.Game'
 lg = love.graphics
 rect= lg.rectangle
 color= lg.setColor
+draw= lg.draw
 --colors because i am lazy
 black = {0,0,0}
 white = {255,255,255}
@@ -22,7 +23,6 @@ red = {255,0,0}
 green = {0,255,0}
 blue ={0,0,255}
 
-dT = 0
 
 --##########################################################################################################################################--
 function love.load()
@@ -36,7 +36,6 @@ function love.update(dt)
 	if dt <= 1/60 then
       love.timer.sleep(0.03)
    	end
-   	dT= dt
 	gamestate:update(dt)
 end
 
@@ -47,6 +46,7 @@ end
 
 --##########################################################################################################################################--
 function love.focus(f)
+	focus=f
 	gamestate:focus(f)
 end
 

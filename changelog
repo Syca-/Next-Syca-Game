@@ -1,3 +1,18 @@
+0.1.1:
+
+Added:
+	hotbar
+	basic placing
+	placing viewer
+
+Fixed:
+	None
+
+Other:
+	removed both velocitys
+	reworked collision to match changes
+
+##############################################################################################################################################
 0.1:
 
 Added:
@@ -8,4 +23,4 @@ Fixed:
 	none
 
 Other:
-	Clean up and simpified old code
+	Cleaned up and simpified old code

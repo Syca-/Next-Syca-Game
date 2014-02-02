@@ -1,0 +1,19 @@
+Design plans:
+
+building(walls,floors,etc)
+random crates(has weapons, objects, other items)
+randomly placed buildings
+moveable objects(chairs,etc) to block doors with
+scaling inventory system(start with two hotbar slots, and four inventory slots)
+enemies come from the ground
+possible multiplayer
+random camera shake to simulate earthquakes
+
+
+
+
+
+
+
+Story:
+For centuries humanity thought earthquakes were caused from plate shifting, no one knew how wrong that was. After a huge earth quake tore the continents into peices, beings arose from the ground. At first it was large worm like creatures than other humanoid beings. Were they once human?
