@@ -13,6 +13,13 @@ local keyDown = love.keyboard.isDown
 local selSlot = 1
 local time = 0
 local timeLimit = .2
+local invDone=false
+local invSlots = {}
+	for k=100,356,70 do
+		for b=200,584,70 do
+			table.insert(invSlots,{x=b,y=k,size=64,width=64,height=64,image=nil,func=nil,amount=nil})
+		end
+	end
 
 Player = class("Player", Creature)
 
@@ -24,6 +31,8 @@ function Player:initialize(name, x, y)
 	self.img:setFilter("nearest","nearest")
 	self.x = y
 	self.y = x
+	self.xvel =0
+	self.yvel=0
 	self.size=24
 	self.width = self.size
 	self.height = self.size
@@ -41,11 +50,11 @@ function Player:initialize(name, x, y)
 	self.gridx=x
 	self.gridy=y
 	self.hotbarSlots = {
-		{x=340-36,y=550,size=32,func=function() self:breakBlock() end,img=tiles.temp}, -- slot 1
-		{x=380-36,y=550,size=32,func=nil,img=nil}, -- slot 2 
-		{x=420-36,y=550,size=32,func=nil,img=nil}, -- slot 3
-		{x=460-36,y=550,size=32,func=nil,img=nil}, -- slot 4
-		{x=500-36,y=550,size=32,func=nil,img=nil} -- slot 5
+		{x=340-36,y=550,size=32,func=function() self:breakBlock() end,img=items.hammer,item=true,amount=1,dura=102}, -- slot 1
+		{x=380-36,y=550,size=32,func=function() self:place(nil,nil,true) end,img=tiles.door,block=true,amount=100}, -- slot 2 
+		{x=420-36,y=550,size=32,func=function() self:place(nil,true) end,img=tiles.wall,block=true,amount=100}, -- slot 3
+		{x=460-36,y=550,size=32,func=function() self:place(true) end,img=tiles.floor,block=true,amount=100}, -- slot 4
+		{x=500-36,y=550,size=32,func=function() self:place(nil,nil,nil,true) end,img=tiles.window,block=true,amount=100} -- slot 5
 	}
 end
 
@@ -68,13 +77,39 @@ function Player:update(dt)
 	elseif self.y >=2400 then
 		self.y = 2400
 	end
+
+	if self.xvel >0 then
+		self.xvel = math.floor(self.xvel)
+	else
+		self.xvel = math.ceil(self.xvel)
+	end
+	if self.yvel >0 then
+		self.yvel = math.floor(self.yvel)
+	else
+		self.yvel = math.ceil(self.yvel)
+	end
+	self.x=self.xvel
+	self.y=self.yvel
+
+	for i,v in pairs(self.hotbarSlots) do
+		if v.img then
+			if v.amount <=0 then
+				v.img = nil
+				v.amount =nil
+				v.func = nil
+			end
+			if v.dura and v.dura <=0 then
+				v.amount = 0
+			end
+		end
+	end
 end
 
 --##########################################################################################################################################--
 function Player:draw()
 	color(white)
 	draw(self.img,self.x,self.y)
-	--rect("fill",self.x,self.y,self.size,self.size)
+
 	color(red)
 	rect("line",self.placer.x,self.placer.y,self.placer.width,self.placer.height)
 	if self.facing == "west" then
@@ -94,22 +129,22 @@ function Player:move(dt)
 	--movement
 	--horizon
 	if (keyDown("d"))then
-			self.x = self.x + self.speed*dt
-			self.facing = "east"
+			self.xvel = self.xvel + self.speed*dt
+			self.anifacing = "east"
 	elseif (keyDown("a"))then  
-			self.x = self.x - self.speed*dt
-			self.facing = "west"
+			self.xvel = self.xvel - self.speed*dt
+			self.anifacing = "west"
 	end
 	--placement control horizon
 	
 	--vertical
 	if (keyDown("w"))then
-		self.y = self.y - self.speed*dt
-		self.facing = "north"
+		self.yvel = self.yvel - self.speed*dt
+		self.anifacing = "north"
 
 	elseif (keyDown("s"))then
-		self.y = self.y + self.speed*dt
-		self.facing = "south"
+		self.yvel = self.yvel + self.speed*dt
+		self.anifacing = "south"
 	end
 	--placement control
 	if (keyCheck=="up") then
@@ -124,11 +159,11 @@ function Player:move(dt)
 
 	for i,v in pairs(blocks)do
 		if aabb(self.placer,blocks[i]) then
-			if keyCheck=="e" and v.door and v.doorOpen==false then
-				v.doorOpen= true
+			if keyReseter=="e" and v.door and v.doorOpen==false then
+				Timer.add(.2,function() v.doorOpen= true end)
 			end
-			if keyCheck=="e" and v.door and v.doorOpen then
-				Timer.add(1,function()v.doorOpen = false end)
+			if keyReseter=="e" and v.door and v.doorOpen then
+				Timer.add(.2,function()v.doorOpen = false end)
 			end
 		end
 	end
@@ -137,32 +172,36 @@ end
 
 --##########################################################################################################################################--
 function Player:useHotbar(dt)
-	local hotbarSlot = {self.hotbarSlots.func(),function() self:place({102,51,0},true) end,function() self:place(blue,nil,nil,true) end,function() self:place({150,150,0},nil,true) end,function() self:place({155,60,255},nil,nil,true) end}
-	if keyCheck==" " then
-		if self.canPlace then
-			time = time - dt
-			if time <=0 then
-				hotbarSlot[selSlot]()
-				time = timeLimit
-			end
+	if keyReseter==" " then
+		if self.hotbarSlots[selSlot].func then
+			self.hotbarSlots[selSlot].func()
 		end
 	end 
 end
 
 --##########################################################################################################################################--
-function Player:place(color,door,floor,wall)
-	local block = {x=0,y=0,width = 24,height=24,size=24,color=color,door=door,doorOpen=false,floor=floor,wall=wall}
+function Player:place(floor,wall,door,window)
+	if self.canPlace then
+		if self.hotbarSlots[selSlot].amount < 99 then
+			self.hotbarSlots[selSlot].amount=self.hotbarSlots[selSlot].amount-1
+		end
+		local block = {x=0,y=0,width = 24,height=24,size=24,door=door,doorOpen=false,floor=floor,wall=wall,window=window,rotate=0}
 
-	block.y= self.gridy
-	block.x = self.gridx
-	table.insert(blocks,block)
+		block.y= self.gridy
+		block.x = self.gridx
+		table.insert(blocks,block)
+	end
 end
 
 --##########################################################################################################################################--
 function Player:breakBlock()
+
 	for i,v in pairs(blocks)do
 		if aabb(self.placer,blocks[i]) then
 			table.remove(blocks,i)
+			if self.hotbarSlots[selSlot].dura<101 then
+				self.hotbarSlots[selSlot].dura=self.hotbarSlots[selSlot].dura-25
+			end
 		end
 	end
 end
@@ -229,18 +268,10 @@ end
 --##########################################################################################################################################--
 
 function Player:Interface()
-	local invDone=false
 	local invKeyCheck = 0
+		--y 100
+		--x 
 	
-	local invSlots = {}
-	if invDone==false then
-		for k=35,490,70 do
-			for b=75,670,70 do
-				table.insert(invSlots,{x=b,y=k,size=64,width=64,height=64,func=nil,image=nil})
-				invDone=true	
-			end
-		end
-	end
 	if numberCheck ~= nil then
 		invKeyCheck = numberCheck
 	end
@@ -258,27 +289,45 @@ function Player:Interface()
 	end
 
 	if self.Enabled then
+		if keyReseter =="y"then
+			invSlots[10].image=tiles.wall
+			invSlots[10].amount=25
+		end
 		if self.inventoryOpen then
 			color(75,75,75,100)
-			rect("fill",65,25,645,505) --inventory background
+			rect("fill",175,75,465,325) --inventory background
 			for i,v in pairs(invSlots) do
 				if aabb(mouse,v) then
 					color(red)
 					rect('fill',v.x,v.y,v.size,v.size)
+				end
+				if v.image then
+					color(white)
+					draw(tileset,v.image,v.x+8.5,v.y+8.5,0,2,2)
+					lg.print(v.amount,v.x+32,v.y+42)
 				end
 				color(white)
 				rect('line',v.x,v.y,v.size,v.size)
 			end
 		end
 
-		color(125,125,125,125)
+		color(125,125,0,175)
 		rect("fill",self.hotbarSlots[selSlot].x,self.hotbarSlots[selSlot].y,self.hotbarSlots[selSlot].size,self.hotbarSlots[selSlot].size)
 		color(white)
 		for i,v in pairs(self.hotbarSlots) do
 			rect("line",v.x,v.y,v.size,v.size)
 			if v.img then
-				draw(tileset,v.img,v.x+3.5,v.y+3.5)
+				if v.block then
+					draw(tileset,v.img,3.7+v.x,3.7+v.y)
+					lg.print(v.amount,v.x+15-string.len(tostring(v.amount)),v.y+16)
+				elseif v.item then
+					draw(itemset,v.img,3.7+v.x,3.7+v.y)
+					lg.print(v.dura,v.x+10,v.y+16)
+				end
 			end
 		end
+		color(white)
+		lg.print("FPS: "..love.timer.getFPS(),400,0)
+		lg.print(tostring(keyReseter),400,10)
 	end
 end

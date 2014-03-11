@@ -4,17 +4,23 @@
 
 --##########################################################################################################################################--
 local SPgame = GameState:addState('Game')
+test=false
 grid = {x={},y={}}
 local gridON = false
-local keyReseter
+keyReseter = nil
 mouse={width=1,height=1}
 tileset = love.graphics.newImage("art/tileset.png")
+itemset = love.graphics.newImage("art/itemset.png")
 tileset:setFilter("nearest","nearest")
+itemset:setFilter("nearest","nearest")
 tiles={
 	wall=love.graphics.newQuad(24,0,24,24,48,48),
 	door=love.graphics.newQuad(0,0,24,24,48,48),
 	floor=love.graphics.newQuad(0,24,24,24,48,48),
-	temp=love.graphics.newQuad(24,24,24,24,48,48)
+	window=love.graphics.newQuad(24,24,24,24,48,48)
+}
+items={
+	hammer=love.graphics.newQuad(0,0,24,24,48,48)
 }
 --##########################################################################################################################################--
 function SPgame:enteredState()
@@ -31,6 +37,7 @@ end
 
 --##########################################################################################################################################--
 function SPgame:update(dt)
+	require("lib/lurker").update()
 	mouse.x,mouse.y=love.mouse.getPosition()
 	Joystick = love.joystick.getJoysticks()[1]
 	camera:setPosition(player.x-(800/2),player.y-(600/2))
@@ -63,25 +70,19 @@ end
 function SPgame:draw()
 	camera:set()
 	for i,v in pairs(blocks) do
+		color(white)
 		if v.floor then
-			color(v.color)
-			rect("fill",v.x,v.y,v.size,v.size)
+			draw(tileset,tiles.floor,v.x,v.y)
 		elseif v.wall then
-			color(v.color)
-			rect("fill",v.x,v.y,v.size,v.size)
-			color(white)
-			rect("line",v.x,v.y,v.size,v.size)
+			draw(tileset,tiles.wall,v.x,v.y)
+		elseif v.window then
+			draw(tileset,tiles.window,v.x,v.y)
 		elseif v.door then
 			if v.doorOpen then
-				color(102,51,0,200)
-				rect("fill",v.x,v.y,v.size,v.size)
-				color(white)
-				rect("line",v.x,v.y,v.size,v.size)
+				color({255,255,255,150})
+				draw(tileset,tiles.door,v.x,v.y)
 			elseif v.doorOpen == false then
-				color(v.color)
-				rect("fill",v.x,v.y,v.size,v.size)
-				color(white)
-				rect("line",v.x,v.y,v.size,v.size)
+				draw(tileset,tiles.door,v.x,v.y)
 			end
 		end
 	end
@@ -97,12 +98,6 @@ function SPgame:draw()
 	camera:unset()
 
 	player:Interface()
-
-	--test stuff
-	color(white)
-
-	lg.print("FPS: "..love.timer.getFPS(),400,0)
-	--lg.print("keys: "..tostring(keyReseter),400,10)
 end
 
 --##########################################################################################################################################--

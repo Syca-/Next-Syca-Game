@@ -1,0 +1,2 @@
+make each item and block seperate then route that to a slot.
+that way I can add together and not randomly placing.

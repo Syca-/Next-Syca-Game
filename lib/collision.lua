@@ -15,12 +15,11 @@ local mtd
        end
     end
     if horizontal then
-       v1.x = v1.x + mtd.x
+       v1.xvel = v1.xvel + mtd.x
        --At this point you should set your vertical speed to zero as well. For me it's xvel
-        
     end
     if vertical then
-       v1.y = v1.y + mtd.y
+       v1.yvel = v1.yvel + mtd.y
        
     end
 end
