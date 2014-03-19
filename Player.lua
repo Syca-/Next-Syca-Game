@@ -17,7 +17,7 @@ local invDone=false
 local invSlots = {}
 	for k=100,356,70 do
 		for b=200,584,70 do
-			table.insert(invSlots,{x=b,y=k,size=64,width=64,height=64,image=nil,func=nil,amount=nil})
+			table.insert(invSlots,{x=b,y=k,imagex=b+8.5,imagey=k+8.5,size=64,width=64,height=64,image=nil,func=nil,amount=nil,dura=nil})
 		end
 	end
 
@@ -49,6 +49,8 @@ function Player:initialize(name, x, y)
 	self.keyCheck = keyCheck
 	self.gridx=x
 	self.gridy=y
+	self.doorY = 0
+	self.doorX=10
 	self.hotbarSlots = {
 		{x=340-36,y=550,size=32,func=function() self:breakBlock() end,img=items.hammer,item=true,amount=1,dura=102}, -- slot 1
 		{x=380-36,y=550,size=32,func=function() self:place(nil,nil,true) end,img=tiles.door,block=true,amount=100}, -- slot 2 
@@ -56,6 +58,9 @@ function Player:initialize(name, x, y)
 		{x=460-36,y=550,size=32,func=function() self:place(true) end,img=tiles.floor,block=true,amount=100}, -- slot 4
 		{x=500-36,y=550,size=32,func=function() self:place(nil,nil,nil,true) end,img=tiles.window,block=true,amount=100} -- slot 5
 	}
+	self.following = false
+	self.stopFollow=false
+	self.followSlot = {}
 end
 
 --##########################################################################################################################################--
@@ -135,7 +140,6 @@ function Player:move(dt)
 			self.xvel = self.xvel - self.speed*dt
 			self.anifacing = "west"
 	end
-	--placement control horizon
 	
 	--vertical
 	if (keyDown("w"))then
@@ -147,23 +151,32 @@ function Player:move(dt)
 		self.anifacing = "south"
 	end
 	--placement control
-	if (keyCheck=="up") then
+	if (keyCheck=="up")then
 			self.facing = "north"
-	elseif (keyCheck=="down") then
+			self.doorY = 0
+			self.doorX=10
+	elseif (keyCheck=="down")then
 			self.facing = "south"
-	elseif (keyCheck=="right") then
+			self.doorY = 0
+			self.doorX=10
+	elseif (keyCheck=="right")then
 			self.facing = "east"
-	elseif (keyCheck=="left") then
+			self.doorX=0
+			self.doorY = 10
+	elseif (keyCheck=="left")then
 			self.facing = "west"
+			self.doorX=0
+			self.doorY = 10
 	end
 
 	for i,v in pairs(blocks)do
 		if aabb(self.placer,blocks[i]) then
-			if keyReseter=="e" and v.door and v.doorOpen==false then
-				Timer.add(.2,function() v.doorOpen= true end)
-			end
-			if keyReseter=="e" and v.door and v.doorOpen then
-				Timer.add(.2,function()v.doorOpen = false end)
+			if keyReseter=="e"then
+				if v.door and v.doorOpen==false then
+					Timer.add(.2,function() v.doorOpen= true end)
+				elseif v.door and v.doorOpen then
+					Timer.add(.2,function()v.doorOpen = false end)
+				end
 			end
 		end
 	end
@@ -172,7 +185,7 @@ end
 
 --##########################################################################################################################################--
 function Player:useHotbar(dt)
-	if keyReseter==" " then
+	if keyReseter==" "then
 		if self.hotbarSlots[selSlot].func then
 			self.hotbarSlots[selSlot].func()
 		end
@@ -185,7 +198,7 @@ function Player:place(floor,wall,door,window)
 		if self.hotbarSlots[selSlot].amount < 99 then
 			self.hotbarSlots[selSlot].amount=self.hotbarSlots[selSlot].amount-1
 		end
-		local block = {x=0,y=0,width = 24,height=24,size=24,door=door,doorOpen=false,floor=floor,wall=wall,window=window,rotate=0}
+		local block = {x=0,y=0,width = 24,height=24,size=24,door=door,doorOpen=false,floor=floor,wall=wall,window=window,doorX=self.doorX,doorY=self.doorY}
 
 		block.y= self.gridy
 		block.x = self.gridx
@@ -269,8 +282,6 @@ end
 
 function Player:Interface()
 	local invKeyCheck = 0
-		--y 100
-		--x 
 	
 	if numberCheck ~= nil then
 		invKeyCheck = numberCheck
@@ -297,14 +308,45 @@ function Player:Interface()
 			color(75,75,75,100)
 			rect("fill",175,75,465,325) --inventory background
 			for i,v in pairs(invSlots) do
-				if aabb(mouse,v) then
+				if v.followMouse then
+					v.imagex=mouse.x
+					v.imagey=mouse.y
+					if self.stopFollow then
+						v.image = nil
+						v.amount = nil
+						v.dura = nil
+						v.func= nil
+						v.followMouse=false
+						v.imagex=self.followSlot.x
+						v.imagey=self.followSlot.y
+					end
+				end
+				if aabb(mouse,v) and v.followMouse ~= true then
 					color(red)
 					rect('fill',v.x,v.y,v.size,v.size)
+					if click=='l' then
+						if v.followMouse ~= true and self.following~=true then
+							self.followSlot={image=v.image,amount=v.amount,dura=v.dura,func=v.func,x=v.imagex,y=v.imagey,previous=v}
+							v.followMouse=true
+							self.following = true
+						elseif self.following and v.followMouse ~= true then
+							v.image = self.followSlot.image
+							v.amount = self.followSlot.amount
+							v.dura = self.followSlot.dura
+							v.func= self.followSlot.func
+							if v ~= self.followSlot.previous then
+								self.stopFollow = true
+								self.following=false
+							else
+								self.stopFollow=false
+							end
+						end
+					end
 				end
 				if v.image then
 					color(white)
-					draw(tileset,v.image,v.x+8.5,v.y+8.5,0,2,2)
-					lg.print(v.amount,v.x+32,v.y+42)
+					draw(tileset,v.image,v.imagex,v.imagey,0,2,2)
+					lg.print(v.amount,v.imagex+26,v.imagey+36)
 				end
 				color(white)
 				rect('line',v.x,v.y,v.size,v.size)
@@ -328,6 +370,6 @@ function Player:Interface()
 		end
 		color(white)
 		lg.print("FPS: "..love.timer.getFPS(),400,0)
-		lg.print(tostring(keyReseter),400,10)
+		lg.print(tostring(self.x),400,10)
 	end
 end

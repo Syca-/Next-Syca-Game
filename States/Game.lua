@@ -8,6 +8,7 @@ test=false
 grid = {x={},y={}}
 local gridON = false
 keyReseter = nil
+click = nil
 mouse={width=1,height=1}
 tileset = love.graphics.newImage("art/tileset.png")
 itemset = love.graphics.newImage("art/itemset.png")
@@ -40,7 +41,7 @@ function SPgame:update(dt)
 	require("lib/lurker").update()
 	mouse.x,mouse.y=love.mouse.getPosition()
 	Joystick = love.joystick.getJoysticks()[1]
-	camera:setPosition(player.x-(800/2),player.y-(600/2))
+	camera:setPosition((player.x+(player.size/2))-(800/2),(player.y+(player.size/2))-(600/2))
 	if Joystick ~= nil then
 		joyConnected = Joystick:isConnected()
 	end
@@ -79,8 +80,7 @@ function SPgame:draw()
 			draw(tileset,tiles.window,v.x,v.y)
 		elseif v.door then
 			if v.doorOpen then
-				color({255,255,255,150})
-				draw(tileset,tiles.door,v.x,v.y)
+				draw(tileset,tiles.door,v.x,v.y, 0, 1, 1, v.doorX, v.doorY)
 			elseif v.doorOpen == false then
 				draw(tileset,tiles.door,v.x,v.y)
 			end
@@ -139,5 +139,21 @@ function SPgame:keyreleased(key)
 			keyReseter = nil
 		end
 		player:keyReleased(key)
+	end
+end
+
+--##########################################################################################################################################--
+function SPgame:mousepressed(x, y, button)
+	if button then
+		click = button
+	end
+end
+
+--##########################################################################################################################################--
+function SPgame:mousereleased(x, y, button)
+	if button then
+		if click == button then
+			click = nil
+		end
 	end
 end
