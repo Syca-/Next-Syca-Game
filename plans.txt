@@ -8,8 +8,9 @@ scaling inventory system(start with two hotbar slots, and four inventory slots)
 enemies come from the ground
 possible multiplayer
 random camera shake to simulate earthquakes
-
-
+random item stats and maybe names
+buildable boats
+machines
 
 
 

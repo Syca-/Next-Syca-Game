@@ -16,6 +16,7 @@ lg = love.graphics
 rect= lg.rectangle
 color= lg.setColor
 draw= lg.draw
+keyDown = love.keyboard.isDown
 --colors because i am lazy
 black = {0,0,0}
 white = {255,255,255,255}

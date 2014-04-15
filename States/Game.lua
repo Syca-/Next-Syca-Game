@@ -4,129 +4,65 @@
 
 --##########################################################################################################################################--
 local SPgame = GameState:addState('Game')
-test=false
+require "Blocks.Blocks"
+require "Items.Items"
 grid = {x={},y={}}
-local gridON = false
 keyReseter = nil
 click = nil
 mouse={width=1,height=1}
-tileset = love.graphics.newImage("art/tileset.png")
-itemset = love.graphics.newImage("art/itemset.png")
-tileset:setFilter("nearest","nearest")
-itemset:setFilter("nearest","nearest")
-tiles={
-	wall=love.graphics.newQuad(24,0,24,24,48,48),
-	door=love.graphics.newQuad(0,0,24,24,48,48),
-	floor=love.graphics.newQuad(0,24,24,24,48,48),
-	window=love.graphics.newQuad(24,24,24,24,48,48)
-}
-items={
-	hammer=love.graphics.newQuad(0,0,24,24,48,48)
-}
+
 --##########################################################################################################################################--
 function SPgame:enteredState()
 	for i=0,2400,24 do
 		table.insert(grid.x,i)
 		table.insert(grid.y,i)
 	end
-	blocks={}
-	require "Player"
-	player = Player:new("Syca", 0, 0)
+	floors={}
+	doors={}
+	walls = {}
+	require "Player.Player"
+	player = Player:new(0, 0)
+	require "Player.GUI"
+	gui = GUI:new()
+
 	require 'lib.camera'
 	camera:setBounds(0, 0, 2400, 2400)
 end
 
 --##########################################################################################################################################--
 function SPgame:update(dt)
-	require("lib/lurker").update()
+	--require("lib/lurker").update()
 	mouse.x,mouse.y=love.mouse.getPosition()
-	Joystick = love.joystick.getJoysticks()[1]
+
 	camera:setPosition((player.x+(player.size/2))-(800/2),(player.y+(player.size/2))-(600/2))
-	if Joystick ~= nil then
-		joyConnected = Joystick:isConnected()
-	end
 	
-	for i,v in pairs(grid.x) do
-		for i,k in pairs(grid.y)do
-			if aabb(player.placer,{x=v,y=k,width=24,height=24}) then
-				player.canPlace = true
-				player.gridx = v
-				player.gridy = k
-			end
-		end
-	end
-	for i,v in pairs(blocks)do
-		if aabb(player.placer,v) then
-			player.canPlace = false
-		end
-		if v.doorOpen==false and v.floor==nil then
-			collide(player,v)
-		end
-	end
 	player:update(dt)
+	gui:update(dt)
 	Timer.update(dt)
 end
 
 --##########################################################################################################################################--
 function SPgame:draw()
 	camera:set()
-	for i,v in pairs(blocks) do
-		color(white)
-		if v.floor then
-			draw(tileset,tiles.floor,v.x,v.y)
-		elseif v.wall then
-			draw(tileset,tiles.wall,v.x,v.y)
-		elseif v.window then
-			draw(tileset,tiles.window,v.x,v.y)
-		elseif v.door then
-			if v.doorOpen then
-				draw(tileset,tiles.door,v.x,v.y, 0, 1, 1, v.doorX, v.doorY)
-			elseif v.doorOpen == false then
-				draw(tileset,tiles.door,v.x,v.y)
-			end
-		end
-	end
+	--draw order
+	--floors
+	--doors
+	--player
+	--walls
 	
 	player:draw()
-	color(white)
-	if gridON then
-		for i,v in pairs(grid.x) do
-			rect("fill",0,v,2400,1)
-			rect("fill",v,0,1,2400)
-		end
-	end
 	camera:unset()
-
-	player:Interface()
+	gui:draw()
 end
 
 --##########################################################################################################################################--
 function SPgame:keypressed(key)
 	if key then
 		keyReseter = key
-		player:keyPressed(keyReseter)
 		if keyReseter == "escape" then
 			love.event.quit()
 		elseif keyReseter=="r"then
 			self:pushState('Game')
-		elseif keyReseter=="f2"then
-			if gridON then
-				gridON = false
-			elseif gridON == false then
-				gridON = true
-			end
-		elseif keyReseter=="f1"then
-			if player.Enabled then
-				player.Enabled = false
-			elseif player.Enabled == false then
-				player.Enabled = true
-			end
-		elseif keyReseter =="i" or keyReseter =="b" then
-			if player.inventoryOpen then
-				player.inventoryOpen=false
-			elseif player.inventoryOpen==false then
-				player.inventoryOpen=true
-			end
 		end
 	end
 	
@@ -138,7 +74,6 @@ function SPgame:keyreleased(key)
 		if keyReseter==key then
 			keyReseter = nil
 		end
-		player:keyReleased(key)
 	end
 end
 
